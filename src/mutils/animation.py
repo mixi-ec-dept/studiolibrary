@@ -540,10 +540,6 @@ class Animation(mutils.Pose):
         """
         self.close()  # Make sure everything is cleaned before importing
 
-        if not self.isAscii(self.mayaPath()):
-            msg = "Cannot load animation using non-ascii paths."
-            raise IOError(msg)
-
         nodes = maya.cmds.file(
             self.mayaPath(),
             i=True,
