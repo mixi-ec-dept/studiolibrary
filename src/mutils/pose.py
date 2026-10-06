@@ -576,6 +576,13 @@ class Pose(mutils.TransferObject):
         """
         cache = self.cache()
 
+        # When keying a rig that has no animation yet (e.g. a freshly opened
+        # MetaHuman face rig), every setKeyframe that creates a new anim curve
+        # is very slow (~0.1 sec each) until the scene has been evaluated once
+        # with the new curve connected. Evaluating once after the first key
+        # makes the remaining keys fast (25 sec -> ~1 sec for 200 attributes).
+        evaluated = not key
+
         for i in range(0, len(cache)):
             srcAttribute, dstAttribute, srcMirrorValue = cache[i]
             if srcAttribute and dstAttribute:
@@ -589,3 +596,9 @@ class Pose(mutils.TransferObject):
                 except (ValueError, RuntimeError):
                     cache[i] = (None, None)
                     logger.debug('Ignoring %s', dstAttribute.fullname())
+                    continue
+
+                if not evaluated:
+                    evaluated = True
+                    currentTime = maya.cmds.currentTime(query=True)
+                    maya.cmds.currentTime(currentTime, update=True)
